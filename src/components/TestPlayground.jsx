@@ -21,6 +21,7 @@ function TestPlayground({ studentInfo, topic, onTestComplete }) {
 
   const timerRef = useRef(null);
   const timerPausedRef = useRef(true); // Start paused
+  const isInitializedRef = useRef(false); // Prevent double-loading in StrictMode
 
   // Helper function to pause/resume timer
   const setTimerPausedState = (paused) => {
@@ -28,10 +29,18 @@ function TestPlayground({ studentInfo, topic, onTestComplete }) {
     setTimerPaused(paused);
   };
 
-  // Initialize first question
+  // Initialize first question (only once, even in StrictMode)
   useEffect(() => {
-    loadFirstQuestion();
+    // Prevent double-loading in React StrictMode (development)
+    if (isInitializedRef.current) return;
+    isInitializedRef.current = true;
 
+    loadFirstQuestion();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Start timer (separate effect so it always runs)
+  useEffect(() => {
     // Start timer (only counts down when not paused)
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -56,7 +65,7 @@ function TestPlayground({ studentInfo, topic, onTestComplete }) {
   const loadFirstQuestion = async () => {
     try {
       setLoading(true);
-      const question = await generateTestQuestions(topic.name, studentInfo);
+      const question = await generateTestQuestions(topic, studentInfo);
       setCurrentQuestion(question);
       setMaxScore((prev) => prev + question.points);
       setQuestionStartTime(Date.now());
@@ -76,6 +85,8 @@ function TestPlayground({ studentInfo, topic, onTestComplete }) {
   const loadNextQuestion = async () => {
     try {
       setLoading(true);
+      setCurrentQuestion(null); // Clear previous question immediately
+
       const performance = {
         score,
         maxScore,
@@ -83,7 +94,7 @@ function TestPlayground({ studentInfo, topic, onTestComplete }) {
       };
 
       const question = await generateNextQuestion(
-        topic.name,
+        topic,
         questionNumber + 1,
         answers,
         performance
@@ -203,7 +214,8 @@ function TestPlayground({ studentInfo, topic, onTestComplete }) {
     return 'timer';
   };
 
-  if (loading && !currentQuestion) {
+  // Only show full-screen loading for the very first question (before any question has loaded)
+  if (!currentQuestion && questionNumber === 1 && answers.length === 0) {
     return (
       <div className="test-container">
         <div className="loading">
@@ -217,7 +229,8 @@ function TestPlayground({ studentInfo, topic, onTestComplete }) {
     );
   }
 
-  if (!currentQuestion) {
+  // Error state: no question and not loading
+  if (!currentQuestion && !loading && !showResult) {
     return (
       <div className="test-container">
         <div className="loading">
@@ -296,6 +309,13 @@ function TestPlayground({ studentInfo, topic, onTestComplete }) {
           </div>
           <div style={{ textAlign: 'center', marginTop: '15px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             Loading next question...
+          </div>
+        </div>
+      ) : loading && !currentQuestion ? (
+        <div className="question-card">
+          <div className="loading">
+            <div className="loading-spinner"></div>
+            <div>Loading next question...</div>
           </div>
         </div>
       ) : (

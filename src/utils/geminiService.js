@@ -15,7 +15,11 @@ export const initializeGemini = () => {
 export const generateTestQuestions = async (topic, studentInfo) => {
   if (!model) initializeGemini();
 
-  const prompt = `You are an intelligent examiner conducting a comprehensive 20-minute test for a student on the topic: "${topic}".
+  const subtopicsText = topic.subtopics && topic.subtopics.length > 0
+    ? `\nFocus on these subtopics: ${topic.subtopics.join(', ')}`
+    : '';
+
+  const prompt = `You are an intelligent examiner conducting a comprehensive 20-minute test for a student on the topic: "${topic.name}".${subtopicsText}
 
 Student Information:
 - Name: ${studentInfo.name}
@@ -79,11 +83,15 @@ Generate the first question now in JSON format only.`;
 export const generateNextQuestion = async (topic, questionNumber, previousAnswers, studentPerformance) => {
   if (!model) initializeGemini();
 
+  const subtopicsText = topic.subtopics && topic.subtopics.length > 0
+    ? `\nFocus on these subtopics: ${topic.subtopics.join(', ')}`
+    : '';
+
   const performanceSummary = previousAnswers.slice(-3).map(a =>
     `Q${a.questionNumber}: ${a.isCorrect ? 'Correct' : 'Incorrect'} (${a.timeSpent}s)`
   ).join(', ');
 
-  const prompt = `You are continuing a test on "${topic}". This is question ${questionNumber}.
+  const prompt = `You are continuing a test on "${topic.name}".${subtopicsText} This is question ${questionNumber}.
 
 Recent Performance: ${performanceSummary}
 Current Score: ${studentPerformance.score}/${studentPerformance.maxScore}

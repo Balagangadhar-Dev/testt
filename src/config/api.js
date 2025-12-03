@@ -1,8 +1,8 @@
 // Split API key for basic obfuscation
 // Remember to set usage quotas on your Gemini API key
-const API_KEY_PART1 = "AIzaSyAYy-bYwY";
-const API_KEY_PART2 = "Mwx_vxF2n_UkxY"; // Add your middle part here
-const API_KEY_PART3 = "E1oNSol4ayU"; // Add your ending part here
+const API_KEY_PART1 = "AIzaSyCp9f";
+const API_KEY_PART2 = "Xdn0qEk7HUJgTI"; // Add your middle part here
+const API_KEY_PART3 = "G2XiUp3ayQ8GCE8"; // Add your ending part here
 
 // Concatenate the API key parts
 export const getGeminiApiKey = () => {

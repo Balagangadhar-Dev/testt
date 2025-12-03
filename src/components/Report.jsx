@@ -59,12 +59,13 @@ function Report({ testData, onRestart }) {
   const downloadPDF = async () => {
     const element = reportRef.current;
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: 1, // Reduced from 2 to 1 for smaller file size
       useCORS: true,
-      logging: false
+      logging: false,
+      backgroundColor: '#ffffff'
     });
 
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL('image/jpeg', 0.7); // Use JPEG with 70% quality instead of PNG
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -74,7 +75,7 @@ function Report({ testData, onRestart }) {
     const imgX = (pdfWidth - imgWidth * ratio) / 2;
     const imgY = 0;
 
-    pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+    pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
     pdf.save(`${testData.studentInfo.name}_${testData.topic.name}_Report.pdf`);
   };
 
